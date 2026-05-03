@@ -12,16 +12,13 @@ Claude Code / GitHub Copilot / Cline 等のマルチツール対応。
 ai-coding-setup/
 ├── AGENTS.md                          # プロジェクト指示書（全ツール共通）
 ├── CLAUDE.md                          # Claude Code 固有設定
-├── .mcp.json                          # MCP サーバ設定
-├── claude-code-development-guide.md   # 開発ガイド本体
-├── docs/                              # ガイドのコピー・補足資料
-├── .claude/
-│   └── agents/                        # Claude Code 用ロール定義
-│       ├── explorer.md
-│       ├── planner.md
-│       ├── generator.md
-│       ├── critic.md
-│       └── evaluator.md
+├── GEMINI.md                          # Gemini CLI 固有設定
+├── .mcp.json                          # Claude Code 用 MCP 設定
+├── .claude/agents/                    # Claude Code 用ロール定義
+├── .github/agents/                    # GitHub Copilot 用ロール定義
+├── .cline/                            # Cline 用設定（ロール + MCP）
+├── .vscode/mcp.json                   # Copilot 用 MCP 設定
+├── docs/                              # ガイド・使い方
 └── README.md
 ```
 

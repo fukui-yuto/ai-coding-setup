@@ -15,28 +15,70 @@ Claude Code を中心に、GitHub Copilot / Cline / OpenClaw / Codex CLI / Gemin
 
 ```
 ai-coding-setup/
+├── setup.sh                           # セットアップスクリプト
 ├── AGENTS.md                          # プロジェクト指示書（全ツール共通）
 ├── CLAUDE.md                          # Claude Code 固有設定
-├── .mcp.json                          # MCP サーバ設定
-├── claude-code-development-guide.md   # 開発ガイド本体
-├── docs/                              # 補足資料
-├── .claude/
-│   └── agents/                        # Claude Code 用ロール定義
-│       ├── explorer.md                # 調査専門（read-only）
-│       ├── planner.md                 # 計画作成（read-only）
-│       ├── generator.md               # コード生成・編集
-│       ├── critic.md                  # 品質レビュー（read-only）
-│       └── evaluator.md               # テスト・ビルド検証
+├── GEMINI.md                          # Gemini CLI 固有設定
+├── .mcp.json                          # Claude Code 用 MCP 設定
+│
+├── .claude/agents/                    # Claude Code 用ロール定義
+│   ├── explorer.md
+│   ├── planner.md
+│   ├── generator.md
+│   ├── critic.md
+│   └── evaluator.md
+│
+├── .github/agents/                    # GitHub Copilot 用ロール定義
+│   ├── explorer.md
+│   ├── planner.md
+│   ├── generator.md
+│   ├── critic.md
+│   └── evaluator.md
+│
+├── .cline/                            # Cline 用設定
+│   ├── agents/                        # ロール定義
+│   └── mcp_settings.json             # MCP 設定
+│
+├── .vscode/mcp.json                   # Copilot 用 MCP 設定
+│
+├── docs/
+│   ├── usage.md                       # 使い方ガイド
+│   └── requirements.md                # 詳細要件定義
 └── README.md
 ```
 
+## 対応ツール
+
+| ツール | 指示書 | ロール定義 | MCP 設定 |
+|---|---|---|---|
+| Claude Code | `AGENTS.md` + `CLAUDE.md` | `.claude/agents/` | `.mcp.json` |
+| GitHub Copilot | `AGENTS.md` | `.github/agents/` | `.vscode/mcp.json` |
+| Cline | `AGENTS.md` | `.cline/agents/` | `.cline/mcp_settings.json` |
+| Codex CLI | `AGENTS.md` | - | - |
+| Gemini CLI | `AGENTS.md` + `GEMINI.md` | - | - |
+| OpenClaw | `AGENTS.md` | - | 独自設定 |
+
 ## クイックスタート
 
-### 自分のプロジェクトに導入する
+### セットアップスクリプトで導入（推奨）
 
-1. `AGENTS.md` をプロジェクトのルートにコピーし、内容を自分のプロジェクトに合わせて編集
-2. `.claude/agents/` 配下のロール定義を必要に応じてコピー
-3. `.mcp.json` を必要に応じて配置
+```bash
+git clone https://github.com/fukui-yuto/ai-coding-setup.git
+cd ai-coding-setup
+
+# 対話的に選択
+./setup.sh ~/my-project
+
+# ツールを直接指定
+./setup.sh ~/my-project --tool claude-code
+./setup.sh ~/my-project --tool copilot
+./setup.sh ~/my-project --tool claude-code --tool copilot
+./setup.sh ~/my-project --tool all
+```
+
+セットアップ後、`AGENTS.md` を自分のプロジェクトに合わせて編集してください。
+
+詳細は [docs/usage.md](docs/usage.md) を参照してください。
 
 ### 推奨ワークフロー
 
@@ -52,7 +94,7 @@ Generator → Evaluator
 
 ## 設計原則
 
-詳細は [claude-code-development-guide.md](claude-code-development-guide.md) を参照してください。
+詳細は [docs/requirements.md](docs/requirements.md) を参照してください。
 
 1. 汎用ロールで大半をカバーし、専門エージェントは必要時のみ補完
 2. AGENTS.md を主軸にしてマルチツール対応
