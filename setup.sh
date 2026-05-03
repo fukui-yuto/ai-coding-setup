@@ -15,6 +15,8 @@ show_help() {
 オプション:
   --tool <ツール名>    使用するツールを指定（複数指定可）
                        claude-code, copilot, cline, codex, gemini, openclaw, all
+                       ※ all と個別指定を混在させた場合は all が優先されます
+  --force              既存ファイルを確認なしで上書き
   --help               このヘルプを表示
 
 例:
@@ -32,6 +34,18 @@ info() { echo -e "\033[1;34m[INFO]\033[0m $1"; }
 success() { echo -e "\033[1;32m[OK]\033[0m $1"; }
 warn() { echo -e "\033[1;33m[WARN]\033[0m $1"; }
 
+# --- 安全なコピー（既存ファイルの上書き警告） ---
+FORCE=false
+
+safe_cp() {
+  local src="$1"
+  local dest="$2"
+  if [[ -f "$dest" && "$FORCE" != "true" ]]; then
+    warn "既存ファイルを上書きします: $dest"
+  fi
+  cp "$src" "$dest"
+}
+
 # --- 引数パース ---
 PROJECT_DIR=""
 TOOLS=()
@@ -39,8 +53,18 @@ TOOLS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tool)
+      if [[ -z "${2:-}" ]]; then
+        echo "エラー: --tool にはツール名を指定してください"
+        echo ""
+        show_help
+        exit 1
+      fi
       TOOLS+=("$2")
       shift 2
+      ;;
+    --force)
+      FORCE=true
+      shift
       ;;
     --help|-h)
       show_help
@@ -67,8 +91,9 @@ if [[ -z "$PROJECT_DIR" ]]; then
   exit 1
 fi
 
+INPUT_DIR="$PROJECT_DIR"
 PROJECT_DIR="$(cd "$PROJECT_DIR" 2>/dev/null && pwd)" || {
-  echo "エラー: ディレクトリが存在しません: $PROJECT_DIR"
+  echo "エラー: ディレクトリが存在しません: $INPUT_DIR"
   exit 1
 }
 
@@ -91,6 +116,11 @@ if [[ ${#TOOLS[@]} -eq 0 ]]; then
   echo ""
   read -rp "番号をカンマ区切りで入力 (例: 1,2): " selection
 
+  if [[ -z "$selection" ]]; then
+    echo "ツールが選択されませんでした。"
+    exit 1
+  fi
+
   IFS=',' read -ra SELECTIONS <<< "$selection"
   for sel in "${SELECTIONS[@]}"; do
     sel="$(echo "$sel" | tr -d ' ')"
@@ -102,6 +132,7 @@ if [[ ${#TOOLS[@]} -eq 0 ]]; then
       5) TOOLS+=("gemini") ;;
       6) TOOLS+=("openclaw") ;;
       7) TOOLS=("all"); break ;;
+      "") ;;
       *) warn "不明な選択: $sel（スキップ）" ;;
     esac
   done
@@ -112,7 +143,7 @@ if [[ ${#TOOLS[@]} -eq 0 ]]; then
   exit 1
 fi
 
-# "all" の展開
+# "all" の展開（all と個別指定の混在時は all が優先）
 for tool in "${TOOLS[@]}"; do
   if [[ "$tool" == "all" ]]; then
     TOOLS=("claude-code" "copilot" "cline" "codex" "gemini" "openclaw")
@@ -136,13 +167,13 @@ info "選択ツール: ${TOOLS[*]}"
 echo ""
 
 # --- 1. AGENTS.md（全ツール共通、必須） ---
-cp "$SCRIPT_DIR/AGENTS.md" "$PROJECT_DIR/AGENTS.md"
+safe_cp "$SCRIPT_DIR/AGENTS.md" "$PROJECT_DIR/AGENTS.md"
 success "AGENTS.md をコピーしました"
 
 # --- 2. Claude Code ---
 if has_tool "claude-code"; then
-  cp "$SCRIPT_DIR/CLAUDE.md" "$PROJECT_DIR/CLAUDE.md"
-  cp "$SCRIPT_DIR/.mcp.json" "$PROJECT_DIR/.mcp.json"
+  safe_cp "$SCRIPT_DIR/CLAUDE.md" "$PROJECT_DIR/CLAUDE.md"
+  safe_cp "$SCRIPT_DIR/.mcp.json" "$PROJECT_DIR/.mcp.json"
   mkdir -p "$PROJECT_DIR/.claude/agents"
   cp "$SCRIPT_DIR/.claude/agents/"*.md "$PROJECT_DIR/.claude/agents/"
   success "Claude Code: CLAUDE.md, .mcp.json, .claude/agents/ をセットアップ"
@@ -153,7 +184,7 @@ if has_tool "copilot"; then
   mkdir -p "$PROJECT_DIR/.github/agents"
   cp "$SCRIPT_DIR/.github/agents/"*.md "$PROJECT_DIR/.github/agents/"
   mkdir -p "$PROJECT_DIR/.vscode"
-  cp "$SCRIPT_DIR/.vscode/mcp.json" "$PROJECT_DIR/.vscode/mcp.json"
+  safe_cp "$SCRIPT_DIR/.vscode/mcp.json" "$PROJECT_DIR/.vscode/mcp.json"
   success "GitHub Copilot: .github/agents/, .vscode/mcp.json をセットアップ"
 fi
 
@@ -161,25 +192,23 @@ fi
 if has_tool "cline"; then
   mkdir -p "$PROJECT_DIR/.cline/agents"
   cp "$SCRIPT_DIR/.cline/agents/"*.md "$PROJECT_DIR/.cline/agents/"
-  cp "$SCRIPT_DIR/.cline/mcp_settings.json" "$PROJECT_DIR/.cline/mcp_settings.json"
+  safe_cp "$SCRIPT_DIR/.cline/mcp_settings.json" "$PROJECT_DIR/.cline/mcp_settings.json"
   success "Cline: .cline/agents/, .cline/mcp_settings.json をセットアップ"
 fi
 
 # --- 5. Codex CLI ---
 if has_tool "codex"; then
-  # AGENTS.md のみ（共通セットアップで済み）
   success "Codex CLI: AGENTS.md で対応（追加ファイルなし）"
 fi
 
 # --- 6. Gemini CLI ---
 if has_tool "gemini"; then
-  cp "$SCRIPT_DIR/GEMINI.md" "$PROJECT_DIR/GEMINI.md"
+  safe_cp "$SCRIPT_DIR/GEMINI.md" "$PROJECT_DIR/GEMINI.md"
   success "Gemini CLI: GEMINI.md をセットアップ"
 fi
 
 # --- 7. OpenClaw ---
 if has_tool "openclaw"; then
-  # AGENTS.md のみ（共通セットアップで済み）
   success "OpenClaw: AGENTS.md で対応（追加ファイルなし）"
 fi
 
@@ -192,5 +221,5 @@ echo ""
 echo "次のステップ:"
 echo "  1. $PROJECT_DIR/AGENTS.md を自分のプロジェクトに合わせて編集"
 echo "  2. MCP 設定のトークンを環境変数で設定"
-echo "  3. 詳細は docs/usage.md を参照"
+echo "  3. 詳細は https://github.com/fukui-yuto/ai-coding-setup/blob/main/docs/usage.md を参照"
 echo ""

@@ -131,9 +131,11 @@ HARNESS_DIR=~/ai-coding-setup
 
 # ロール定義を Copilot 用パスにコピー
 mkdir -p "$PROJECT_DIR/.github/agents"
-for role in explorer planner generator critic evaluator; do
-  cp "$HARNESS_DIR/.claude/agents/$role.md" "$PROJECT_DIR/.github/agents/$role.md"
-done
+cp "$HARNESS_DIR/.github/agents/"*.md "$PROJECT_DIR/.github/agents/"
+
+# MCP 設定
+mkdir -p "$PROJECT_DIR/.vscode"
+cp "$HARNESS_DIR/.vscode/mcp.json" "$PROJECT_DIR/.vscode/mcp.json"
 ```
 
 #### ファイル構成
@@ -164,7 +166,7 @@ Copilot Chat で `@` を使ってロールを指定します:
 
 #### 注意事項
 
-- MCP 設定は Copilot の UI（VS Code の設定画面）から行います。`.mcp.json` は Copilot では読み取られません
+- MCP 設定は `.vscode/mcp.json` に配置するか、VS Code の設定 UI から追加します
 - ロール定義の `tools:` や `model:` は Copilot では無視されます。`description` と本文の指示が重要です
 - YAML frontmatter の `description` がロールの説明として Copilot Chat に表示されます
 
@@ -182,9 +184,12 @@ HARNESS_DIR=~/ai-coding-setup
 
 # AGENTS.md（共通セットアップで済み）
 
-# ロール定義をプロジェクトに配置（任意）
+# ロール定義をプロジェクトに配置（参考用。Cline は自動認識しないため、プロンプト指示時の参照として使用）
 mkdir -p "$PROJECT_DIR/.cline/agents"
-cp "$HARNESS_DIR/.claude/agents/"*.md "$PROJECT_DIR/.cline/agents/"
+cp "$HARNESS_DIR/.cline/agents/"*.md "$PROJECT_DIR/.cline/agents/"
+
+# MCP 設定
+cp "$HARNESS_DIR/.cline/mcp_settings.json" "$PROJECT_DIR/.cline/mcp_settings.json"
 ```
 
 #### ファイル構成
@@ -202,11 +207,11 @@ cp "$HARNESS_DIR/.claude/agents/"*.md "$PROJECT_DIR/.cline/agents/"
 
 1. VS Code で Cline 拡張を開く
 2. 設定 → Custom Instructions に `AGENTS.md` の内容を貼り付ける（または「AGENTS.md を読んで従ってください」と記載）
-3. MCP サーバは Cline の設定 UI から追加する
+3. MCP サーバは `.cline/mcp_settings.json` を配置するか、Cline の設定 UI から追加する
 
 #### ロールの呼び出し方
 
-Cline ではサブエージェント機能が限定的なため、プロンプトでロールを明示的に指示します:
+Cline はロール定義ファイルを自動認識しません。`.cline/agents/` のファイルはプロンプト指示時の参照用です。プロンプトでロールを明示的に指示します:
 
 ```
 Explorer として認証モジュールの実装を調査してください。ファイルの編集は行わないでください。
@@ -262,8 +267,8 @@ HARNESS_DIR=~/ai-coding-setup
 
 # AGENTS.md（共通セットアップで済み）
 
-# Gemini CLI 用に GEMINI.md を作成（任意、AGENTS.md だけでも可）
-cp "$HARNESS_DIR/AGENTS.md" "$PROJECT_DIR/GEMINI.md"
+# Gemini CLI 用に GEMINI.md をコピー（任意、AGENTS.md だけでも可）
+cp "$HARNESS_DIR/GEMINI.md" "$PROJECT_DIR/GEMINI.md"
 ```
 
 #### ファイル構成
@@ -271,10 +276,10 @@ cp "$HARNESS_DIR/AGENTS.md" "$PROJECT_DIR/GEMINI.md"
 ```
 プロジェクト/
 ├── AGENTS.md                # 共通指示書
-└── GEMINI.md                # Gemini CLI 固有設定（任意）
+└── GEMINI.md                # Gemini CLI 固有設定（任意、AGENTS.md への参照）
 ```
 
-`GEMINI.md` がある場合はそちらが優先されます。Gemini 固有の指示がなければ `AGENTS.md` だけで十分です。
+`GEMINI.md` がある場合はそちらが優先されます。GEMINI.md は AGENTS.md への参照を記載するだけなので、Gemini 固有の指示がなければ `AGENTS.md` だけで十分です。
 
 #### ロールの呼び出し方
 
@@ -299,11 +304,7 @@ OpenClaw は `AGENTS.md` を読み取ります。
 #### 導入するファイル
 
 ```bash
-# AGENTS.md（共通セットアップで済み）
-
-# Skill を使う場合（任意）
-mkdir -p ~/.openclaw/workspace/skills
-cp -r ~/ai-coding-setup/.claude/skills/* ~/.openclaw/workspace/skills/
+# AGENTS.md のみ（共通セットアップで済み）
 ```
 
 #### ファイル構成
@@ -328,11 +329,10 @@ OpenClaw は独自の設定ファイルを使います:
 | 機能 | Claude Code | GitHub Copilot | Cline | Codex CLI | Gemini CLI | OpenClaw |
 |---|---|---|---|---|---|---|
 | AGENTS.md 読み取り | o | o | o | o | o | o |
-| 専用指示書 | CLAUDE.md | - | UI 設定 | - | GEMINI.md | - |
-| サブエージェント定義 | `.claude/agents/` | `.github/agents/` | `.cline/agents/` | x | x | 限定的 |
-| `@ロール名` で呼び出し | 自動発動 | `@ロール名` | x | x | x | x |
-| MCP 設定 | `.mcp.json` | UI 経由 | UI 経由 | x | x | 独自設定 |
-| Skill 配置 | `.claude/skills/` | `.agents/skills/` | `.cline/skills/` | x | x | 独自パス |
+| 専用指示書 | CLAUDE.md | - | - | - | GEMINI.md | - |
+| サブエージェント定義 | `.claude/agents/` | `.github/agents/` | 参考用のみ | x | x | 限定的 |
+| ロール呼び出し | 自動発動 | `@ロール名` | プロンプト指示 | プロンプト指示 | プロンプト指示 | プロンプト指示 |
+| MCP 設定 | `.mcp.json` | `.vscode/mcp.json` | `.cline/mcp_settings.json` | x | x | 独自設定 |
 
 ---
 
@@ -399,34 +399,19 @@ model: sonnet
 
 ## 5. ワークフロー例
 
-### 例 1: 新機能の追加（複雑なタスク）
+**複雑なタスク** (Explorer → Planner → Generator → Critic → Evaluator):
 
 ```
-1. Explorer で既存コードを調査
-   → 「認証周りの現在の実装を調べて」
-
-2. Planner で実装計画を作成
-   → 「OAuth 対応の実装計画を作って」
-
-3. Generator で実装
-   → 「計画の Step 1〜3 を実装して」
-
-4. Critic でレビュー
-   → 「変更をレビューして」
-
-5. Evaluator で検証
-   → 「テストを実行して」
+「認証周りの実装を調べて」 → 「OAuth 対応の実装計画を作って」 → 「計画の Step 1 を実装して」 → 「変更をレビューして」 → 「テストを実行して」
 ```
 
-### 例 2: バグ修正（簡単な変更）
+**簡単な変更** (Generator → Evaluator):
 
 ```
-1. Generator で修正
-   → 「この null チェック漏れを修正して」
-
-2. Evaluator で検証
-   → 「テストが通るか確認して」
+「この null チェック漏れを修正して」 → 「テストが通るか確認して」
 ```
+
+ワークフローの詳細は [requirements.md のセクション 7](requirements.md#7-ワークフロー要件) を参照。
 
 ---
 

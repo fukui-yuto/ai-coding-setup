@@ -53,7 +53,7 @@ ai-coding-setup/
 |---|---|---|---|
 | Claude Code | `AGENTS.md` + `CLAUDE.md` | `.claude/agents/` | `.mcp.json` |
 | GitHub Copilot | `AGENTS.md` | `.github/agents/` | `.vscode/mcp.json` |
-| Cline | `AGENTS.md` | `.cline/agents/` | `.cline/mcp_settings.json` |
+| Cline | `AGENTS.md` | 参考用のみ | `.cline/mcp_settings.json` |
 | Codex CLI | `AGENTS.md` | - | - |
 | Gemini CLI | `AGENTS.md` + `GEMINI.md` | - | - |
 | OpenClaw | `AGENTS.md` | - | 独自設定 |
