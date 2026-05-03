@@ -212,6 +212,56 @@ if has_tool "openclaw"; then
   success "OpenClaw: AGENTS.md で対応（追加ファイルなし）"
 fi
 
+# --- 8. 不要ファイルのクリーンアップ ---
+CLEANED=false
+
+if ! has_tool "claude-code"; then
+  for f in "$PROJECT_DIR/CLAUDE.md" "$PROJECT_DIR/.mcp.json"; do
+    if [[ -f "$f" ]]; then
+      rm "$f"
+      CLEANED=true
+    fi
+  done
+  if [[ -d "$PROJECT_DIR/.claude/agents" ]]; then
+    rm -rf "$PROJECT_DIR/.claude/agents"
+    # .claude/ が空なら削除
+    rmdir "$PROJECT_DIR/.claude" 2>/dev/null || true
+    CLEANED=true
+  fi
+fi
+
+if ! has_tool "copilot"; then
+  if [[ -d "$PROJECT_DIR/.github/agents" ]]; then
+    rm -rf "$PROJECT_DIR/.github/agents"
+    # .github/ が空なら削除（他の用途で使われている場合は残す）
+    rmdir "$PROJECT_DIR/.github" 2>/dev/null || true
+    CLEANED=true
+  fi
+  if [[ -f "$PROJECT_DIR/.vscode/mcp.json" ]]; then
+    rm "$PROJECT_DIR/.vscode/mcp.json"
+    rmdir "$PROJECT_DIR/.vscode" 2>/dev/null || true
+    CLEANED=true
+  fi
+fi
+
+if ! has_tool "cline"; then
+  if [[ -d "$PROJECT_DIR/.cline" ]]; then
+    rm -rf "$PROJECT_DIR/.cline"
+    CLEANED=true
+  fi
+fi
+
+if ! has_tool "gemini"; then
+  if [[ -f "$PROJECT_DIR/GEMINI.md" ]]; then
+    rm "$PROJECT_DIR/GEMINI.md"
+    CLEANED=true
+  fi
+fi
+
+if [[ "$CLEANED" == "true" ]]; then
+  success "選択されなかったツールの不要ファイルを削除しました"
+fi
+
 # --- 完了 ---
 echo ""
 echo "========================================="
