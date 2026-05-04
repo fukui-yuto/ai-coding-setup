@@ -87,11 +87,14 @@ safe_rm() {
 
 safe_rmdir() {
   local dir="$1"
+  if [[ ! -d "$dir" ]]; then
+    return
+  fi
   if [[ "$DRY_RUN" == "true" ]]; then
     info "[dry-run] 空ディレクトリ削除: $dir"
     return
   fi
-  rmdir "$dir" 2>/dev/null || true
+  rmdir "$dir" 2>/dev/null || warn "ディレクトリが空でないため残しました: $dir"
 }
 
 # --- 引数パース ---

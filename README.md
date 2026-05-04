@@ -2,7 +2,7 @@
 
 AI コーディングエージェントのハーネス（プロジェクト用設定一式）を構築するための実践ガイドとテンプレート集です。
 
-Claude Code を中心に、GitHub Copilot / Cline / OpenClaw / Codex CLI / Gemini CLI 等のマルチツールに対応しています。
+プロジェクトの構成・規約・制約をエージェントに毎回説明する手間を削減し、複数セッションで一貫した品質を維持できます。Claude Code を中心に、GitHub Copilot / Cline / OpenClaw / Codex CLI / Gemini CLI 等のマルチツールに対応しています。
 
 ## 特徴
 
