@@ -6,7 +6,7 @@ Claude Code を中心に、GitHub Copilot / Cline / OpenClaw / Codex CLI / Gemin
 
 ## 特徴
 
-- **6 つの汎用エージェントロール** (Explorer / Planner / Generator / Critic / Evaluator / Executor) による役割分担
+- **5 つの汎用エージェントロール** (Explorer / Planner / Generator / Critic / Evaluator) + オプションの Executor による役割分担
 - **AGENTS.md を主軸** にしたマルチツール対応設計
 - **最小権限の原則** に基づくツール権限管理
 - **副作用の隔離** (Executor ロールへの分離)
@@ -74,6 +74,11 @@ cd ai-coding-setup
 ./setup.sh ~/my-project --tool copilot
 ./setup.sh ~/my-project --tool claude-code --tool copilot
 ./setup.sh ~/my-project --tool all
+
+# オプション
+./setup.sh ~/my-project --tool claude-code --force    # 既存ファイルを確認なしで上書き
+./setup.sh ~/my-project --tool claude-code --clean    # 他ツールの不要ファイルを削除
+./setup.sh ~/my-project --tool all --dry-run          # 変更内容をプレビュー（実行しない）
 ```
 
 セットアップ後、`AGENTS.md` を自分のプロジェクトに合わせて編集してください。

@@ -27,6 +27,23 @@ cd ai-coding-setup
 ./setup.sh ~/my-project --tool all
 ```
 
+#### オプション
+
+| オプション | 説明 |
+|---|---|
+| `--tool <名前>` | 使用するツールを指定（複数指定可）。`claude-code`, `copilot`, `cline`, `codex`, `gemini`, `openclaw`, `all` |
+| `--force` | 既存ファイルを確認なしで上書き |
+| `--clean` | 選択されなかったツールの既存ファイルを削除する |
+| `--dry-run` | 実際にはファイルを変更せず、何が行われるかを表示する |
+
+```bash
+# 例: Claude Code のみに切り替え、他ツールのファイルを削除
+./setup.sh ~/my-project --tool claude-code --clean
+
+# 例: 変更内容をプレビュー
+./setup.sh ~/my-project --tool all --dry-run
+```
+
 スクリプトが選択したツールに応じて、必要なファイル（指示書・ロール定義・MCP 設定）をプロジェクトにコピーします。
 
 ### Step 3: AGENTS.md を自分のプロジェクトに合わせて編集
