@@ -1,0 +1,16 @@
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+
+# Node (MCP servers)
+node_modules/

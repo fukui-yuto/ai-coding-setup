@@ -17,6 +17,8 @@ show_help() {
                        claude-code, copilot, cline, codex, gemini, openclaw, all
                        ※ all と個別指定を混在させた場合は all が優先されます
   --force              既存ファイルを確認なしで上書き
+  --clean              選択されなかったツールの既存ファイルを削除する
+  --dry-run            実際にはファイルを変更せず、何が行われるかを表示する
   --help               このヘルプを表示
 
 例:
@@ -24,6 +26,8 @@ show_help() {
   ./setup.sh ~/my-project --tool copilot
   ./setup.sh ~/my-project --tool claude-code --tool copilot
   ./setup.sh ~/my-project --tool all
+  ./setup.sh ~/my-project --tool claude-code --clean
+  ./setup.sh ~/my-project --tool all --dry-run
 
 ツールを指定しない場合は対話的に選択できます。
 HELP
@@ -36,14 +40,42 @@ warn() { echo -e "\033[1;33m[WARN]\033[0m $1"; }
 
 # --- 安全なコピー（既存ファイルの上書き警告） ---
 FORCE=false
+CLEAN=false
+DRY_RUN=false
 
 safe_cp() {
   local src="$1"
   local dest="$2"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "[dry-run] コピー: $src → $dest"
+    return
+  fi
   if [[ -f "$dest" && "$FORCE" != "true" ]]; then
     warn "既存ファイルを上書きします: $dest"
   fi
   cp "$src" "$dest"
+}
+
+safe_mkdir() {
+  local dir="$1"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "[dry-run] ディレクトリ作成: $dir"
+    return
+  fi
+  mkdir -p "$dir"
+}
+
+safe_rm() {
+  local target="$1"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "[dry-run] 削除: $target"
+    return
+  fi
+  if [[ -d "$target" ]]; then
+    rm -rf "$target"
+  elif [[ -f "$target" ]]; then
+    rm "$target"
+  fi
 }
 
 # --- 引数パース ---
@@ -64,6 +96,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --force)
       FORCE=true
+      shift
+      ;;
+    --clean)
+      CLEAN=true
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
       shift
       ;;
     --help|-h)
@@ -164,6 +204,8 @@ has_tool() {
 echo ""
 info "プロジェクト: $PROJECT_DIR"
 info "選択ツール: ${TOOLS[*]}"
+[[ "$DRY_RUN" == "true" ]] && info "モード: dry-run（実際の変更は行いません）"
+[[ "$CLEAN" == "true" ]] && info "クリーンアップ: 有効"
 echo ""
 
 # --- 1. AGENTS.md（全ツール共通、必須） ---
@@ -174,24 +216,36 @@ success "AGENTS.md をコピーしました"
 if has_tool "claude-code"; then
   safe_cp "$SCRIPT_DIR/CLAUDE.md" "$PROJECT_DIR/CLAUDE.md"
   safe_cp "$SCRIPT_DIR/.mcp.json" "$PROJECT_DIR/.mcp.json"
-  mkdir -p "$PROJECT_DIR/.claude/agents"
-  cp "$SCRIPT_DIR/.claude/agents/"*.md "$PROJECT_DIR/.claude/agents/"
+  safe_mkdir "$PROJECT_DIR/.claude/agents"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "[dry-run] コピー: $SCRIPT_DIR/.claude/agents/*.md → $PROJECT_DIR/.claude/agents/"
+  else
+    cp "$SCRIPT_DIR/.claude/agents/"*.md "$PROJECT_DIR/.claude/agents/"
+  fi
   success "Claude Code: CLAUDE.md, .mcp.json, .claude/agents/ をセットアップ"
 fi
 
 # --- 3. GitHub Copilot ---
 if has_tool "copilot"; then
-  mkdir -p "$PROJECT_DIR/.github/agents"
-  cp "$SCRIPT_DIR/.github/agents/"*.md "$PROJECT_DIR/.github/agents/"
-  mkdir -p "$PROJECT_DIR/.vscode"
+  safe_mkdir "$PROJECT_DIR/.github/agents"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "[dry-run] コピー: $SCRIPT_DIR/.github/agents/*.md → $PROJECT_DIR/.github/agents/"
+  else
+    cp "$SCRIPT_DIR/.github/agents/"*.md "$PROJECT_DIR/.github/agents/"
+  fi
+  safe_mkdir "$PROJECT_DIR/.vscode"
   safe_cp "$SCRIPT_DIR/.vscode/mcp.json" "$PROJECT_DIR/.vscode/mcp.json"
   success "GitHub Copilot: .github/agents/, .vscode/mcp.json をセットアップ"
 fi
 
 # --- 4. Cline ---
 if has_tool "cline"; then
-  mkdir -p "$PROJECT_DIR/.cline/agents"
-  cp "$SCRIPT_DIR/.cline/agents/"*.md "$PROJECT_DIR/.cline/agents/"
+  safe_mkdir "$PROJECT_DIR/.cline/agents"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "[dry-run] コピー: $SCRIPT_DIR/.cline/agents/*.md → $PROJECT_DIR/.cline/agents/"
+  else
+    cp "$SCRIPT_DIR/.cline/agents/"*.md "$PROJECT_DIR/.cline/agents/"
+  fi
   safe_cp "$SCRIPT_DIR/.cline/mcp_settings.json" "$PROJECT_DIR/.cline/mcp_settings.json"
   success "Cline: .cline/agents/, .cline/mcp_settings.json をセットアップ"
 fi
@@ -212,54 +266,60 @@ if has_tool "openclaw"; then
   success "OpenClaw: AGENTS.md で対応（追加ファイルなし）"
 fi
 
-# --- 8. 不要ファイルのクリーンアップ ---
-CLEANED=false
+# --- 8. 不要ファイルのクリーンアップ（--clean 指定時のみ） ---
+if [[ "$CLEAN" == "true" ]]; then
+  CLEANED=false
 
-if ! has_tool "claude-code"; then
-  for f in "$PROJECT_DIR/CLAUDE.md" "$PROJECT_DIR/.mcp.json"; do
-    if [[ -f "$f" ]]; then
-      rm "$f"
+  if ! has_tool "claude-code"; then
+    for f in "$PROJECT_DIR/CLAUDE.md" "$PROJECT_DIR/.mcp.json"; do
+      if [[ -f "$f" ]]; then
+        safe_rm "$f"
+        CLEANED=true
+      fi
+    done
+    if [[ -d "$PROJECT_DIR/.claude/agents" ]]; then
+      safe_rm "$PROJECT_DIR/.claude/agents"
+      if [[ "$DRY_RUN" != "true" ]]; then
+        rmdir "$PROJECT_DIR/.claude" 2>/dev/null || true
+      fi
       CLEANED=true
     fi
-  done
-  if [[ -d "$PROJECT_DIR/.claude/agents" ]]; then
-    rm -rf "$PROJECT_DIR/.claude/agents"
-    # .claude/ が空なら削除
-    rmdir "$PROJECT_DIR/.claude" 2>/dev/null || true
-    CLEANED=true
   fi
-fi
 
-if ! has_tool "copilot"; then
-  if [[ -d "$PROJECT_DIR/.github/agents" ]]; then
-    rm -rf "$PROJECT_DIR/.github/agents"
-    # .github/ が空なら削除（他の用途で使われている場合は残す）
-    rmdir "$PROJECT_DIR/.github" 2>/dev/null || true
-    CLEANED=true
+  if ! has_tool "copilot"; then
+    if [[ -d "$PROJECT_DIR/.github/agents" ]]; then
+      safe_rm "$PROJECT_DIR/.github/agents"
+      if [[ "$DRY_RUN" != "true" ]]; then
+        rmdir "$PROJECT_DIR/.github" 2>/dev/null || true
+      fi
+      CLEANED=true
+    fi
+    if [[ -f "$PROJECT_DIR/.vscode/mcp.json" ]]; then
+      safe_rm "$PROJECT_DIR/.vscode/mcp.json"
+      if [[ "$DRY_RUN" != "true" ]]; then
+        rmdir "$PROJECT_DIR/.vscode" 2>/dev/null || true
+      fi
+      CLEANED=true
+    fi
   fi
-  if [[ -f "$PROJECT_DIR/.vscode/mcp.json" ]]; then
-    rm "$PROJECT_DIR/.vscode/mcp.json"
-    rmdir "$PROJECT_DIR/.vscode" 2>/dev/null || true
-    CLEANED=true
-  fi
-fi
 
-if ! has_tool "cline"; then
-  if [[ -d "$PROJECT_DIR/.cline" ]]; then
-    rm -rf "$PROJECT_DIR/.cline"
-    CLEANED=true
+  if ! has_tool "cline"; then
+    if [[ -d "$PROJECT_DIR/.cline" ]]; then
+      safe_rm "$PROJECT_DIR/.cline"
+      CLEANED=true
+    fi
   fi
-fi
 
-if ! has_tool "gemini"; then
-  if [[ -f "$PROJECT_DIR/GEMINI.md" ]]; then
-    rm "$PROJECT_DIR/GEMINI.md"
-    CLEANED=true
+  if ! has_tool "gemini"; then
+    if [[ -f "$PROJECT_DIR/GEMINI.md" ]]; then
+      safe_rm "$PROJECT_DIR/GEMINI.md"
+      CLEANED=true
+    fi
   fi
-fi
 
-if [[ "$CLEANED" == "true" ]]; then
-  success "選択されなかったツールの不要ファイルを削除しました"
+  if [[ "$CLEANED" == "true" ]]; then
+    success "選択されなかったツールの不要ファイルを削除しました"
+  fi
 fi
 
 # --- 完了 ---

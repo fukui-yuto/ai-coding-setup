@@ -39,6 +39,24 @@ ai-coding-setup/
 ## エージェントロール
 - explorer / planner / generator / critic / evaluator
 
+## 開発コマンド
+<!-- プロジェクトに合わせて書き換えてください -->
+```bash
+# テスト
+npm test              # 全テスト実行
+npm run test:watch    # ウォッチモード
+
+# リント・フォーマット
+npm run lint          # リント
+npm run format        # フォーマット
+
+# ビルド
+npm run build         # プロダクションビルド
+
+# 型チェック
+npm run typecheck     # TypeScript 型チェック
+```
+
 ## 推奨ワークフロー
 - 複雑なタスク: Explorer → Planner → Generator → Critic → Evaluator
 - 簡単な変更: Generator → Evaluator
