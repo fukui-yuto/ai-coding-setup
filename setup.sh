@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+shopt -s nullglob
 
 # ai-coding-setup セットアップスクリプト
 # 使用するツールを選択し、必要なファイルのみをプロジェクトに導入します。
@@ -82,6 +83,15 @@ safe_rm() {
   elif [[ -f "$target" ]]; then
     rm "$target"
   fi
+}
+
+safe_rmdir() {
+  local dir="$1"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "[dry-run] 空ディレクトリ削除: $dir"
+    return
+  fi
+  rmdir "$dir" 2>/dev/null || true
 }
 
 # --- 引数パース ---
@@ -231,7 +241,8 @@ if has_tool "claude-code"; then
   if [[ "$DRY_RUN" == "true" ]]; then
     info "[dry-run] コピー: $SCRIPT_DIR/.claude/agents/*.md → $PROJECT_DIR/.claude/agents/"
   else
-    cp "$SCRIPT_DIR/.claude/agents/"*.md "$PROJECT_DIR/.claude/agents/"
+    local_files=("$SCRIPT_DIR/.claude/agents/"*.md)
+    [[ ${#local_files[@]} -gt 0 ]] && cp "${local_files[@]}" "$PROJECT_DIR/.claude/agents/"
   fi
   success "Claude Code: CLAUDE.md, .mcp.json, .claude/agents/ をセットアップ"
 fi
@@ -242,7 +253,8 @@ if has_tool "copilot"; then
   if [[ "$DRY_RUN" == "true" ]]; then
     info "[dry-run] コピー: $SCRIPT_DIR/.github/agents/*.md → $PROJECT_DIR/.github/agents/"
   else
-    cp "$SCRIPT_DIR/.github/agents/"*.md "$PROJECT_DIR/.github/agents/"
+    local_files=("$SCRIPT_DIR/.github/agents/"*.md)
+    [[ ${#local_files[@]} -gt 0 ]] && cp "${local_files[@]}" "$PROJECT_DIR/.github/agents/"
   fi
   safe_mkdir "$PROJECT_DIR/.vscode"
   safe_cp "$SCRIPT_DIR/.vscode/mcp.json" "$PROJECT_DIR/.vscode/mcp.json"
@@ -255,7 +267,8 @@ if has_tool "cline"; then
   if [[ "$DRY_RUN" == "true" ]]; then
     info "[dry-run] コピー: $SCRIPT_DIR/.cline/agents/*.md → $PROJECT_DIR/.cline/agents/"
   else
-    cp "$SCRIPT_DIR/.cline/agents/"*.md "$PROJECT_DIR/.cline/agents/"
+    local_files=("$SCRIPT_DIR/.cline/agents/"*.md)
+    [[ ${#local_files[@]} -gt 0 ]] && cp "${local_files[@]}" "$PROJECT_DIR/.cline/agents/"
   fi
   safe_cp "$SCRIPT_DIR/.cline/mcp_settings.json" "$PROJECT_DIR/.cline/mcp_settings.json"
   success "Cline: .cline/agents/, .cline/mcp_settings.json をセットアップ"
@@ -290,9 +303,7 @@ if [[ "$CLEAN" == "true" ]]; then
     done
     if [[ -d "$PROJECT_DIR/.claude/agents" ]]; then
       safe_rm "$PROJECT_DIR/.claude/agents"
-      if [[ "$DRY_RUN" != "true" ]]; then
-        rmdir "$PROJECT_DIR/.claude" 2>/dev/null || true
-      fi
+      safe_rmdir "$PROJECT_DIR/.claude"
       CLEANED=true
     fi
   fi
@@ -300,16 +311,12 @@ if [[ "$CLEAN" == "true" ]]; then
   if ! has_tool "copilot"; then
     if [[ -d "$PROJECT_DIR/.github/agents" ]]; then
       safe_rm "$PROJECT_DIR/.github/agents"
-      if [[ "$DRY_RUN" != "true" ]]; then
-        rmdir "$PROJECT_DIR/.github" 2>/dev/null || true
-      fi
+      safe_rmdir "$PROJECT_DIR/.github"
       CLEANED=true
     fi
     if [[ -f "$PROJECT_DIR/.vscode/mcp.json" ]]; then
       safe_rm "$PROJECT_DIR/.vscode/mcp.json"
-      if [[ "$DRY_RUN" != "true" ]]; then
-        rmdir "$PROJECT_DIR/.vscode" 2>/dev/null || true
-      fi
+      safe_rmdir "$PROJECT_DIR/.vscode"
       CLEANED=true
     fi
   fi

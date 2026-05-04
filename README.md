@@ -79,6 +79,7 @@ cd ai-coding-setup
 ./setup.sh ~/my-project --tool claude-code --force    # 既存ファイルを確認なしで上書き
 ./setup.sh ~/my-project --tool claude-code --clean    # 他ツールの不要ファイルを削除
 ./setup.sh ~/my-project --tool all --dry-run          # 変更内容をプレビュー（実行しない）
+./setup.sh --help                                     # 全オプションを表示
 ```
 
 セットアップ後、`AGENTS.md` を自分のプロジェクトに合わせて編集してください。
@@ -87,15 +88,12 @@ cd ai-coding-setup
 
 ### 推奨ワークフロー
 
-**複雑なタスク:**
 ```
-Explorer → Planner → Generator → Critic → Evaluator
+複雑なタスク: Explorer → Planner → Generator → Critic → Evaluator
+簡単な変更:   Generator → Evaluator
 ```
 
-**簡単な変更:**
-```
-Generator → Evaluator
-```
+詳細は [docs/usage.md のワークフロー例](docs/usage.md#5-ワークフロー例) を参照。
 
 ## 設計原則
 

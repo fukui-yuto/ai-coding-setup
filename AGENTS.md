@@ -10,18 +10,13 @@ Claude Code / GitHub Copilot / Cline 等のマルチツール対応。
 - 対象ツール: Claude Code, GitHub Copilot, Cline, OpenClaw, Codex CLI, Gemini CLI
 
 ## ディレクトリ構成
+<!-- 自分のプロジェクトの実際のディレクトリ構造に書き換えてください -->
 ```
-ai-coding-setup/
-├── AGENTS.md                          # プロジェクト指示書（全ツール共通）
-├── CLAUDE.md                          # Claude Code 固有設定
-├── GEMINI.md                          # Gemini CLI 固有設定
-├── .mcp.json                          # Claude Code 用 MCP 設定
-├── .claude/agents/                    # Claude Code 用ロール定義
-├── .github/agents/                    # GitHub Copilot 用ロール定義
-├── .cline/                            # Cline 用設定（ロール + MCP）
-├── .vscode/mcp.json                   # Copilot 用 MCP 設定
-├── docs/                              # ガイド・使い方
-└── README.md
+my-project/
+├── src/                               # ソースコード
+├── tests/                             # テスト
+├── docs/                              # ドキュメント
+└── package.json                       # 依存管理
 ```
 
 ## コーディング規約

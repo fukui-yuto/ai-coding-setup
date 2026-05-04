@@ -256,6 +256,7 @@ OpenClaw は独自の設定ファイルを使います:
 | サブエージェント定義 | `.claude/agents/` | `.github/agents/` | 参考用のみ | x | x | 限定的 |
 | ロール呼び出し | 自動発動 | `@ロール名` | プロンプト指示 | プロンプト指示 | プロンプト指示 | プロンプト指示 |
 | MCP 設定 | `.mcp.json` | `.vscode/mcp.json` | `.cline/mcp_settings.json` | x | x | 独自設定 |
+| MCP ルートキー | `mcpServers` | `servers` | `mcpServers` | - | - | - |
 
 ---
 
