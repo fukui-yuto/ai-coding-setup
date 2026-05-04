@@ -6,6 +6,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+VALID_TOOLS="claude-code copilot cline codex gemini openclaw all"
+
 # --- ヘルプ ---
 show_help() {
   cat <<'HELP'
@@ -50,8 +52,12 @@ safe_cp() {
     info "[dry-run] コピー: $src → $dest"
     return
   fi
-  if [[ -f "$dest" && "$FORCE" != "true" ]]; then
-    warn "既存ファイルを上書きします: $dest"
+  if [[ -f "$dest" ]]; then
+    if [[ "$FORCE" == "true" ]]; then
+      info "上書き: $dest"
+    else
+      warn "既存ファイルを上書きします: $dest"
+    fi
   fi
   cp "$src" "$dest"
 }
@@ -89,6 +95,11 @@ while [[ $# -gt 0 ]]; do
         echo "エラー: --tool にはツール名を指定してください"
         echo ""
         show_help
+        exit 1
+      fi
+      if ! echo "$VALID_TOOLS" | grep -qw "$2"; then
+        echo "エラー: 不明なツール名: $2"
+        echo "有効なツール名: $VALID_TOOLS"
         exit 1
       fi
       TOOLS+=("$2")

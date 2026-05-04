@@ -40,7 +40,7 @@ ai-coding-setup/
 - explorer / planner / generator / critic / evaluator
 
 ## 開発コマンド
-<!-- プロジェクトに合わせて書き換えてください -->
+<!-- 重要: 以下は Node.js プロジェクト向けの例です。自分のプロジェクトの実際のコマンドに書き換えてください -->
 ```bash
 # テスト
 npm test              # 全テスト実行

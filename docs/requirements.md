@@ -396,7 +396,7 @@ Executor のワークフローは省略不可:
 | サブエージェント定義 | `.claude/agents/` | `.github/agents/` | 参考用のみ | x | x | 限定的 |
 | ロール呼び出し方式 | 自動発動 | `@ロール名` | プロンプト指示 | プロンプト指示 | プロンプト指示 | プロンプト指示 |
 | MCP 設定 | `.mcp.json` | `.vscode/mcp.json` | `.cline/mcp_settings.json` | x | x | 独自 |
-| Skill 配置 | `.claude/skills/` | `.agents/skills/` | `.cline/skills/` | x | x | 独自 |
+| Skill 配置 | `.claude/skills/` | `.github/skills/` | `.cline/skills/` | x | x | 独自 |
 
 ### 8.2 ロール定義の同期
 
